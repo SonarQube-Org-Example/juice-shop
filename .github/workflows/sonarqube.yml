@@ -1,28 +1,39 @@
-name: Build
+name: SonarQube Analysis
 on:
   workflow_dispatch:
+    inputs:
+      PROJECT_KEY:
+        description: 'SonarQube project key'
+        required: false
+        default: ''
+      SONAR_ORGANIZATION:
+        description: 'SonarQube Cloud organization key'
+        required: false
+        default: ''
   push:
     branches:
-      - master # or the name of your main branch
-      - "feature/*"
+      - main
+      - master
+      - "feature/**"
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
-  build:
-    name: Build
+  sonarqube:
+    name: SonarQube Analysis
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: "Use Node.js 14"
-        uses: actions/setup-node@v1
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
         with:
-          node-version: 14
-      - uses: sonarsource/sonarqube-scan-action@master
-        with:
-          args: >
-            -X
+          node-version: 20
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@v7.0.0
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          args: >
+            -Dsonar.projectKey=${{ inputs.PROJECT_KEY }}
+            -Dsonar.organization=${{ inputs.SONAR_ORGANIZATION }}
